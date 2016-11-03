@@ -8,7 +8,7 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.forgerock.docker</groupId>
+    <groupId>org.forgerock.docker</groupId>
     <artifactId>docker</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -21,14 +21,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!--
-          Where to copy SNAPSHOT software. Default is local directory ./staging
-        -->
-        <softwareDir>./staging</softwareDir>
-
-        <!-- SNAPSHOT software versions. -->
-
+        <!-- Default versions to build  -->
         <openamVersion>14.0.0-SNAPSHOT</openamVersion>
         <opendjVersion>4.0.0-SNAPSHOT</opendjVersion>
         <openidmVersion>5.0.0-SNAPSHOT</openidmVersion>

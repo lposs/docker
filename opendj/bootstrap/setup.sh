@@ -7,7 +7,7 @@ echo "Setting up default OpenDJ instance"
 
 /opt/opendj/setup --cli -p 389 --ldapsPort 636 --enableStartTLS --generateSelfSignedCertificate \
   --baseDN $BASE_DN -h localhost --rootUserPassword "$PASSWORD" \
-  --acceptLicense --no-prompt --sampleData 2
+  --acceptLicense --no-prompt --sampleData 200
 
 
 #LDIF=""
