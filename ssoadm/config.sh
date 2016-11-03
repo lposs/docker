@@ -9,6 +9,6 @@
 while true; do sleep 1000; done
 
 
-# todo:   Mount a git repo with batch commands, and run
+# todo:   Mount a git repo or config dir with batch commands, and run
 
 # ./ssoadm do-batch -u amadmin -f pw -c -Z /config/openam/ssoadm_batch

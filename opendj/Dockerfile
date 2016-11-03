@@ -17,28 +17,26 @@ ENV DIR_MANAGER_PW_FILE /var/secrets/opendj/dirmanager.pw
 ENV MVN_REPO=https://maven.forgerock.org/repo/repo/org/forgerock/opendj
 ENV OPENDJ_VERSION=4.0.0-SNAPSHOT
 
-RUN curl $MVN_REPO/opendj-server-legacy/$OPENDJ_VERSION/opendj-server-legacy-$OPENDJ_VERSION.zip \
-       -o /tmp/opendj.zip \
-   && unzip /tmp/opendj.zip -d /opt \
-   && rm /tmp/*zip
+# Example of how you can download the DJ zip file from maven
+#RUN curl $MVN_REPO/opendj-server-legacy/$OPENDJ_VERSION/opendj-server-legacy-$OPENDJ_VERSION.zip -o /tmp/opendj.zip
 
-# When testing the build it is faster to use local files
-#ADD opendj.zip /tmp/
-#RUN unzip /tmp/opendj.zip -d /opt
+# This assumes the dj zip file is in this directory
+ADD opendj.zip /tmp/
 
-
-WORKDIR /opt/opendj
 
 # Creating instance.loc consolidates the writable directories under one root
 # We also create the extensions directory
 # We set a dir manager default password value here, but this is almost
 # certainly not what you want. This hard coded path to the password
 # should get over mounted by a secret volume with the "real" password. See the README
-RUN echo "/opt/opendj/data" > /opt/opendj/instance.loc  && \
+RUN unzip /tmp/opendj.zip -d /opt  && rm /tmp/opendj.zip && \
+    echo "/opt/opendj/data" > /opt/opendj/instance.loc  && \
     mkdir -p /opt/opendj/data/lib/extensions && \
     mkdir -p /var/secrets/opendj && \
     echo "password"  > ${DIR_MANAGER_PW_FILE}
 
+
+WORKDIR /opt/opendj
 
 ADD Dockerfile /
 

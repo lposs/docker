@@ -16,22 +16,21 @@ RUN rm -fr webapps/*
 # see http://www.gpickin.com/index.cfm/blog/how-to-get-your-tomcat-to-pounce-on-startup-not-crawl
 
 
-
 # Note: By default tomcat does NOT listen on 8443. You must add a custom server.xml file to change this
 EXPOSE 8080 8443
 
 
 
-# If you want to use your own custom ig, use these lines
-#ADD openig.war webapps/ROOT.war
+# Download your openig war to this directory
+ADD openig.war /tmp/openig.war
 
 
 # otherwise, pull down IG from the Maven repo
-ENV MVN_REPO=https://maven.forgerock.org/repo/repo/org/forgerock/openig
-ENV OPENIG_VERSION=5.0.0-SNAPSHOT
+#ENV MVN_REPO=https://maven.forgerock.org/repo/repo/org/forgerock/openig
+#ENV OPENIG_VERSION=5.0.0-SNAPSHOT
+#
+#RUN curl $MVN_REPO/openig-war/$OPENIG_VERSION/openig-war-$OPENIG_VERSION.war \
+#     -o /tmp/openig.war \
 
-RUN curl $MVN_REPO/openig-war/$OPENIG_VERSION/openig-war-$OPENIG_VERSION.war \
-     -o /tmp/openig.war \
- && unzip /tmp/openig.war -d /usr/local/tomcat/webapps/ROOT \
- && rm -f /tmp/*zip
 
+RUN unzip /tmp/openig.war -d /usr/local/tomcat/webapps/ROOT && rm -f /tmp/openig.war
