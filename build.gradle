@@ -1,0 +1,153 @@
+// Uses https://github.com/bmuschko/gradle-docker-plugin for building docker images
+import java.nio.file.*
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:3.0.3'
+    }
+}
+
+defaultTasks 'all'
+
+apply plugin: 'application'
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+
+version = '1.0'
+
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://maven.forgerock.org/repo/snapshots"
+    }
+    maven {
+        url "https://maven.forgerock.org/repo/releases"
+    }
+}
+
+// Docker config
+docker {
+    if (System.env.DOCKER_HOST) {
+        url = "$System.env.DOCKER_HOST".replace("tcp","https")
+        if (System.env.DOCKER_CERT_PATH) {
+            certPath = new File(System.env.DOCKER_CERT_PATH)
+
+        }
+    } else {
+        url = 'unix:///var/run/docker.sock'
+    }
+}
+
+
+ext {
+    // Version numbers for build products
+    openamVersion = "14.0.0-SNAPSHOT"
+    opendjVersion = "4.0.0-SNAPSHOT"
+    openidmVersion = "5.0.0-SNAPSHOT"
+    openigVersion = "5.0.0-SNAPSHOT"
+    // default repo name
+    repo = "forgerock"
+}
+
+
+configurations {
+    openam
+    opendj
+    openidm
+    openig
+}
+
+
+dependencies {
+    openam "org.forgerock.openam:openam-server:${openamVersion}@war"
+    openam "org.forgerock.openam:openam-distribution-ssoconfiguratortools:${openamVersion}@zip"
+    openam "org.forgerock.openam:openam-distribution-ssoadmintools:${openamVersion}@zip"
+    opendj "org.forgerock.opendj:opendj-server-legacy:${opendjVersion}@zip"
+    openidm "org.forgerock.openidm:openidm-zip:${openidmVersion}@zip"
+    openig "org.forgerock.openig:openig-war:${openigVersion}@war"
+}
+
+// utility to copy from src File f to path (string) dest
+def copyTo(src,dest) {
+    println "Copy $src to $dest"
+    Files.copy(src.toPath(), new File(dest).toPath(),  StandardCopyOption.REPLACE_EXISTING)
+}
+
+clean {
+    delete "openam/openam.war", "openam-config/ssoconfig.zip", "opendj/opendj.zip", "openig/openig.war",
+            "openidm/openidm.zip"
+}
+
+task openamDeps() << {
+    configurations.openam.each { f ->
+        if (f.name.contains("openam-server")) {
+            copyTo(f, "openam/openam.war")
+        } else if (f.name.contains("configurator")) {
+            copyTo(f, "openam-config/ssoconfig.zip")
+        } else if  (f.name.contains("ssoadmintools")) {
+            copyTo(f, "ssoadm/ssoadmintools.zip")
+        }
+    }
+}
+
+task opendjDeps() <<  {  configurations.opendj.each  { f -> copyTo(f,"opendj/opendj.zip")  } }
+task openidmDeps() << {  configurations.openidm.each { f -> copyTo(f,"openidm/openidm.zip")  } }
+task openigDeps() <<  {  configurations.openig.each { f -> copyTo(f,"openig/openig.war")  } }
+
+
+// Docker builds are here
+task openam(type: DockerBuildImage, dependsOn: openamDeps) {
+    inputDir =  project.file('openam')
+    tag = "${repo}/openam:${openamVersion}"
+}
+
+task openamConfig(type: DockerBuildImage, dependsOn: openamDeps) {
+    inputDir =  project.file('openam-config')
+    tag = "${repo}/openam-config:${openamVersion}"
+}
+
+task ssoadm(type: DockerBuildImage, dependsOn: openamDeps) {
+    inputDir =  project.file('ssoadm')
+    tag = "${repo}/ssoadm:${openamVersion}"
+}
+
+task opendj(type: DockerBuildImage, dependsOn: opendjDeps) {
+    inputDir =  project.file('opendj')
+    tag = "${repo}/opendj:${opendjVersion}"
+}
+
+task openidm(type: DockerBuildImage, dependsOn: openidmDeps) {
+    inputDir =  project.file('openidm')
+    tag = "${repo}/openidm:${openidmVersion}"
+}
+
+
+task openig(type: DockerBuildImage, dependsOn: openigDeps) {
+    inputDir =  project.file('openig')
+    tag = "${repo}/openig:${openigVersion}"
+}
+
+
+task all(dependsOn: [opendj, openam, openamConfig, openig, openidm]) { }
+
+
+// Tag and push images to gcr.io for running on GKE
+task gke(type: Exec) {
+    commandLine 'bash', '-e', '-c', """
+       docker tag forgerock/openam:${openamVersion} gcr.io/engineering-devops/openam:${openamVersion};
+       docker tag forgerock/openam-config:${openamVersion} gcr.io/engineering-devops/openam-config:${openamVersion};
+       docker tag forgerock/opendj:${opendjVersion} gcr.io/engineering-devops/opendj:${opendjVersion};
+
+       gcloud docker -- push gcr.io/engineering-devops/openam:${openamVersion};
+       gcloud docker -- push gcr.io/engineering-devops/openam-config:${openamVersion};
+       gcloud docker -- push gcr.io/engineering-devops/opendj:${opendjVersion};
+    """
+
+}

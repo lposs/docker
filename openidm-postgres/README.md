@@ -1,5 +1,14 @@
 # openidm-postgres
 
+
+# Important Note:  
+
+When OpenIDM 5.x is released, we will publish Dockerfiles for postrgres
+along with the openidm distribution zip.  This project is left
+as an example of how to build a postgress image with OpenIDM schema.
+
+
+
 Extends the base postgres image with the schema required for OpenIDM
 
 
@@ -31,7 +40,7 @@ select * from openidm.internaluser;
 
 # Notes
 
-Altenative strategy using Docker data volumes
+Alternative strategy using Docker data volumes
 
 
 ```

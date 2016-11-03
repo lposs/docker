@@ -4,15 +4,6 @@
 This is designed to be a flexible OpenAM image that can be used in 
 different deployment styles.
 
-* Running the image directly will result in OpenAM coming up
-ready to be configured
-* Create a child image (FROM forgerock/openam), and supply a /var/tmp/config directory
-to provide bootstrap configuration. See sample/config for the
-format
-* Alternatively, instead of creating a child image, mount config
-files on /var/tmp/config 
-
-
 # Volumes 
 
 You can mount optional volumes to control the behaviour of the image:

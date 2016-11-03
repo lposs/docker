@@ -8,13 +8,15 @@ cd /var/tmp/ssoconfig
 
 
 # Where OpenAM is in the k8s cluster. The default is openam
-SERVER_URL=${OPENAM_INSTANCE:-http://openam:80}
-URI=${SERVER_URI:-/openam}
+export SERVER_URL=${OPENAM_INSTANCE:-http://openam:80}
+export URI=${SERVER_URI:-/openam}
+
+export INSTANCE="${SERVER_URL}/${URI}"
 
 # Alive check
-ALIVE="${SERVER_URL}/${URI}/isAlive.jsp"
+ALIVE="${INSTANCE}/isAlive.jsp"
 # Config page. This comes up if AM is not configured
-CONFIG_URL="${SERVER_URL}${URI}/config/options.htm"
+CONFIG_URL="${INSTANCE}/config/options.htm"
 
 # Wait for OpenAM to come up before configuring it
 function wait_for_openam
@@ -53,10 +55,9 @@ function wait_for_openam
    done
 
 	# Sleep additional time in case DJ is not quite up yet
-	echo "About to begin configuration in 30 seconds"
-	sleep 30
+	echo "About to begin configuration in 10 seconds"
+	sleep 10
 }
-
 
 
 wait_for_openam
@@ -71,9 +72,14 @@ fi
 echo "Running Configurator"
 java -jar openam-configurator-tool*.jar -f /var/tmp/config/openam.properties
 
-# Todo
-# When amster is done - add additional commands here..:
 
+if [[ -x amster.sh ]]; then
+echo "Executing REST commands"
+   ./amster.sh
+fi
+
+
+echo "Done. This container will sleep for a while, but you can now safely undeploy it"
 # For debugging purposes it is handy to leave the container running by sleeping
 sleep 5000
 
