@@ -13,43 +13,30 @@ will need a ForgeRock community account to create PRs or issues.
 
 To create a pull request, fork the project to your private community stash account, clone it to your workstation,
 commit your changes and push them up to your stash account. You can create a pull request on stash.
-
-
+``
 
 ## About
 
-This is very much a work in progress. You will need to modify the Dockerfiles here to suit
+This is a work in progress. You will need to modify the Dockerfiles here to suit
 your needs. The Dockerfiles are changing quite often as we find better ways to build these images
 for a wide range of requirements. 
 
-Some of the Docker images dynamically pull the ForgeRock assets from maven, and some
-expect that the war or zip is already downloaded to the directory containing the Dockerfile.
 
+The provided build scripts downloads nightly builds from ForgeRock's maven repo
+and will build and tag the docker images. You may need to setup your
+own maven mirror for these artifacts.
 
+## Building
 
-The provided Makefile and build scripts downloads nightly builds from ForgeRock's maven repo
-and will build and tag the docker images
+There are three ways to build the Docker images:
 
-To build
-
-```
-make clean
-make
-```
-
-# Getting Started Example using OpenAM
-
-The openam-onbuild contains a Docker image is a good place to start. There is sample/ directory 
-in that image that will build and configure a child image. Please see the README
-
-
-
-# Building Docker Images using Jenkins
-
-If you have a Jenkins CI pipeline, you can automatically build these images:
- * Check this repo out of git
- * Copy the relevant war or zip file from ForgeRock's maven repo
- * Use the Jenkins Docker plugin to perform a docker build, tag and push the image.
+* Manually. Copy the relevant artifacts (example: openam.war) to the directory
+and run ```docker build -t openam openam```. The included maven pom.xml
+can download artifacts from maven for you.
+* Use the build.sh shell script. This does essentially the same as a 
+manual build
+* Gradle.   Executing ./gradlew  will by default download the products
+and build them.
 
 
 # Building Minor or Patch Releases
@@ -59,7 +46,8 @@ backstage.forgerock.com and download the appropriate binary. The binary should b
 placed in the Docker build directory (e.g. openam/) and should not have any
 version info (openam.war, not OpenAM-13.0.1.war).
 
-Note that some images directly pull from maven -so you may need to modify the Dockerfile
+
+# Kubernetes
 
 If you are interested in running on a Kubernetes cluster,
 see  [here](https://github.com/ForgeRock/fretes)
@@ -67,5 +55,4 @@ see  [here](https://github.com/ForgeRock/fretes)
 
 # How to run these images
 
-Please see the README.md in each directory.  If you want to run OpenAM you probably want to start
-with the openam-onbuild image. 
+Please see the README.md in each directory.  

@@ -48,9 +48,9 @@ fi
 
 
 if (bin/status -n | grep Started) ; then
-   echo "OpenDJ is started"
-   # We cant exit because we are pid 1
-   while true; do sleep 100000; done
+   # A restart is needed to ensure we pick up any JVM env var args
+   echo "Restarting OpenDJ after installation."
+   bin/stop-ds
 fi
 
 
