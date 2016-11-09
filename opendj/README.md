@@ -23,7 +23,7 @@ docker run -i -t -v `pwd`/dj:/opt/opendj/data forgerock/opendj
 
 This image separates out the read only bits (DJ binaries) from the volatile data.
 
-All writable files and configuration (persisted data) are kept under /opt/opendj/data. The idea is that you will mount 
+All writable files and configuration (persisted data) is kept under /opt/opendj/data. The idea is that you will mount 
 a volume (Docker Volume, or Kubernetes Volume) on /opt/opendj/data that will survive container restarts.
 
 If you choose not to mount a persistent volume OpenDJ will start fine - but you will lose your data when the container 
@@ -95,6 +95,26 @@ A copy of the /opt/opendj/data/config/ directory should also be saved as it cont
 
 # Replication 
 
-The run.sh will call boostrap/replicate.sh if DJ_MASTER_SERVER is set. The basic idea is that all servers
-replicate to a master. This is a very simple strategy that works for very small OpenDJ clusters.
+run.sh calls bootstrap/replicate.sh if DJ_MASTER_SERVER is set. The idea is that all servers
+replicate to the master. This is a very simple strategy that works for small OpenDJ clusters.
+
+
+# JVM tuning 
+
+The env var OPENDJ_JAVA_ARGS can be set and will override the java.properties
+in opendj/config. 
+
+
+To use the G1 Garbage collector specify -XX:+UseG1GC 
+
+
+To Debug GC add: 
+-verbose:gc  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M
+
+Todo:  Create small / medium / large / x-large setting for OpenDJ
+
+
+See http://blog.sokolenko.me/2014/11/javavm-options-production.html 
+
+
 

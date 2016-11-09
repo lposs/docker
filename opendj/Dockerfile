@@ -6,6 +6,9 @@ WORKDIR /opt
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
+# Default options for a small instance. Overrride the environment var OPENDJ_JAVA_ARGS as needed
+ENV OPENDJ_JAVA_ARGS -server -Xmx512m -XX:+UseG1GC
+
 
 # Path to secret file that contains the cn=Directory Manager password
 # Used to configure the image
@@ -14,13 +17,13 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 # If no volume is mounted, a default password is set
 ENV DIR_MANAGER_PW_FILE /var/secrets/opendj/dirmanager.pw
 
-ENV MVN_REPO=https://maven.forgerock.org/repo/repo/org/forgerock/opendj
-ENV OPENDJ_VERSION=4.0.0-SNAPSHOT
 
-# Example of how you can download the DJ zip file from maven
+# Example of how you can download the DJ zip file from a maven repo
+# ENV MVN_REPO=https://maven.forgerock.org/repo/repo/org/forgerock/opendj
+# ENV OPENDJ_VERSION=4.0.0-SNAPSHOT
 #RUN curl $MVN_REPO/opendj-server-legacy/$OPENDJ_VERSION/opendj-server-legacy-$OPENDJ_VERSION.zip -o /tmp/opendj.zip
 
-# This assumes the dj zip file is in this directory
+# Use this to directly add the opendj zip file
 ADD opendj.zip /tmp/
 
 
@@ -28,7 +31,7 @@ ADD opendj.zip /tmp/
 # We also create the extensions directory
 # We set a dir manager default password value here, but this is almost
 # certainly not what you want. This hard coded path to the password
-# should get over mounted by a secret volume with the "real" password. See the README
+# should get over mounted by a secret volume with the "real" password. See README.md
 RUN unzip /tmp/opendj.zip -d /opt  && rm /tmp/opendj.zip && \
     echo "/opt/opendj/data" > /opt/opendj/instance.loc  && \
     mkdir -p /opt/opendj/data/lib/extensions && \
@@ -41,7 +44,6 @@ WORKDIR /opt/opendj
 ADD Dockerfile /
 
 ADD bootstrap/ /opt/opendj/bootstrap/
-
 
 
 EXPOSE 389 636 4444 8989
