@@ -57,7 +57,7 @@ RUN mkdir -p /root/openam/openam && mkdir -p /root/.openamcfg \
 
 # For debugging OpenAM in a container uncomment this
 # Use something like  kubectl port-forward POD 5005:5005
-ENV CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"
+# ENV CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"
 
 
 # Settings for tomcat cache.
