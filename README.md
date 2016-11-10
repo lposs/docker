@@ -35,8 +35,10 @@ and run ```docker build -t openam openam```. The included maven pom.xml
 can download artifacts from maven for you.
 * Use the build.sh shell script. This does essentially the same as a 
 manual build
-* Gradle.   Executing ./gradlew  will by default download the products
-and build them.
+* Gradle.   Executing ```./gradlew```  will by default download the products
+and build them. If you are using nightly snapshots, you may need
+to use ```./gradlew --refresh-dependencies``` to get gradle to download the latest 
+release.
 
 
 # Building Minor or Patch Releases
