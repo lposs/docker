@@ -30,7 +30,7 @@ function wait_for_openam
 		curl ${CONFIG_URL}
 
 
-		response=$(curl --write-out %{http_code} --silent --output /dev/null ${CONFIG_URL} )
+		response=$(curl --write-out %{http_code} --silent --max-time 15 --output /dev/null ${CONFIG_URL} )
 
       echo "Got Response code $response"
       if [ ${response} == "302" ]; then
