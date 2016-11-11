@@ -4,7 +4,7 @@
 # Container puts everything in
 
 
-cd /var/tmp/ssoconfig
+# cd /var/tmp/ssoconfig
 
 
 # Where OpenAM is in the k8s cluster. The default is openam
@@ -70,10 +70,10 @@ fi
 
 
 echo "Running Configurator"
-java -jar openam-configurator-tool*.jar -f /var/tmp/config/openam.properties
+java -jar /var/tmp/ssoconfig/openam-configurator-tool*.jar -f /var/tmp/config/openam.properties
 
 
-if [[ -x amster.sh ]]; then
+if [[ -x ./amster.sh ]]; then
 echo "Executing REST commands"
    ./amster.sh
 fi
