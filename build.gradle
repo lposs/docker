@@ -138,7 +138,7 @@ task openig(type: DockerBuildImage, dependsOn: openigDeps) {
 task all(dependsOn: [opendj, openam, openamConfig, openig, openidm]) { }
 
 
-// Tag and push images to gcr.io for running on GKE
+// An example of tagging and pushing images to gcr.io for running on GKE
 task gke(type: Exec, dependsOn: [opendj, openam, openamConfig] ) {
     commandLine 'bash', '-e', '-c', """
        docker tag forgerock/openam:${openamVersion} gcr.io/engineering-devops/openam:${openamVersion};
