@@ -19,6 +19,7 @@ WORKDIR /var/tmp
 # Download AM configurator from maven build
 
 COPY config.sh /var/tmp/
+COPY amster.sh /var/tmp/
 
 CMD ["/var/tmp/config.sh"]
 

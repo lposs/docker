@@ -19,7 +19,7 @@ echo "Setting up replication from $MYHOSTNAME to $MASTER"
 
 # K8s puts the service name in /etc/hosts
 if grep ${MASTER} /etc/hosts; then
- echo "We are the master. Skipping replication setup to ourself"
+ echo "We are the master. Skipping replication setup to ourselves"
  exit 0
 fi
 
@@ -49,6 +49,6 @@ echo "initializing replication"
 
 bin/dsreplication initialize --baseDN $BASE_DN \
   --adminUID admin --adminPassword $PASSWORD \
-  --hostSource $MYHOSTNAME --portSource 4444 \
-  --hostDestination $MASTER --portDestination 4444 -X -n
+  --hostSource $MASTER --portSource 4444 \
+  --hostDestination $MYHOSTNAME --portDestination 4444 -X -n
 

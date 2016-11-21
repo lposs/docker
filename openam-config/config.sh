@@ -4,9 +4,6 @@
 # Container puts everything in
 
 
-cd /var/tmp/ssoconfig
-
-
 # Where OpenAM is in the k8s cluster. The default is openam
 export SERVER_URL=${OPENAM_INSTANCE:-http://openam:80}
 export URI=${SERVER_URI:-/openam}
@@ -30,7 +27,7 @@ function wait_for_openam
 		curl ${CONFIG_URL}
 
 
-		response=$(curl --write-out %{http_code} --silent --max-time 15 --output /dev/null ${CONFIG_URL} )
+		response=$(curl --write-out %{http_code} --silent --connect-timeout 15 --output /dev/null ${CONFIG_URL} )
 
       echo "Got Response code $response"
       if [ ${response} == "302" ]; then
@@ -70,12 +67,12 @@ fi
 
 
 echo "Running Configurator"
-java -jar openam-configurator-tool*.jar -f /var/tmp/config/openam.properties
+java -jar /var/tmp/ssoconfig/openam-configurator-tool*.jar -f /var/tmp/config/openam.properties
 
 
-if [[ -x amster.sh ]]; then
+if [ -x /var/tmp/amster.sh ]; then
 echo "Executing REST commands"
-   ./amster.sh
+   /var/tmp/amster.sh
 fi
 
 

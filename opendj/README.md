@@ -117,4 +117,10 @@ Todo:  Create small / medium / large / x-large setting for OpenDJ
 See http://blog.sokolenko.me/2014/11/javavm-options-production.html 
 
 
+Auth Rate test
+
+ ./authrate -w password -D '%2$s'  -f -c 10 \
+ -b "ou=people,dc=openam,dc=forgerock,dc=org" -g "rand(0,2000)" "(uid=user.%d)"
+
+
 
