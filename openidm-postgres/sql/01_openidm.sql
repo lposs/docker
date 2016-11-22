@@ -61,7 +61,6 @@ CREATE TABLE openidm.managedobjects (
 );
 
 CREATE UNIQUE INDEX idx_managedobjects_object ON openidm.managedobjects (objecttypes_id,objectid);
-CREATE INDEX fk_managedobjects_objectypes ON openidm.managedobjects (objecttypes_id);
 -- Note that the next two indices apply only to role objects, as only role objects have a condition or temporalConstraints
 CREATE INDEX idx_json_managedobjects_roleCondition ON openidm.managedobjects
     ( json_extract_path_text(fullobject, 'condition') );
@@ -134,15 +133,8 @@ CREATE TABLE openidm.relationships (
   CONSTRAINT idx_relationships_object UNIQUE (objecttypes_id, objectid)
 );
 
-CREATE INDEX idx_json_relationships_firstId ON openidm.relationships
-    ( json_extract_path_text(fullobject, 'firstId') );
-CREATE INDEX idx_json_relationships_firstPropertyName ON openidm.relationships
-    ( json_extract_path_text(fullobject, 'firstPropertyName') );
-
-CREATE INDEX idx_json_relationships_secondId ON openidm.relationships
-    ( json_extract_path_text(fullobject, 'secondId') );
-CREATE INDEX idx_json_relationships_secondPropertyName ON openidm.relationships
-    ( json_extract_path_text(fullobject, 'secondPropertyName') );
+CREATE INDEX idx_json_relationships_first ON openidm.relationships ( json_extract_path_text(fullobject, 'firstId'), json_extract_path_text(fullobject, 'firstPropertyName') );
+CREATE INDEX idx_json_relationships_second ON openidm.relationships ( json_extract_path_text(fullobject, 'secondId'), json_extract_path_text(fullobject, 'secondPropertyName') );
 
 -- -----------------------------------------------------
 -- Table openidm.relationshipproperties (not used in postgres)
@@ -175,19 +167,6 @@ CREATE TABLE openidm.links (
 
 CREATE UNIQUE INDEX idx_links_first ON openidm.links (linktype, linkqualifier, firstid);
 CREATE UNIQUE INDEX idx_links_second ON openidm.links (linktype, linkqualifier, secondid);
-
-
--- -----------------------------------------------------
--- Table openidm.security
--- -----------------------------------------------------
-
-CREATE TABLE openidm.security (
-  objectid VARCHAR(38) NOT NULL,
-  rev VARCHAR(38) NOT NULL,
-  storestring TEXT,
-  PRIMARY KEY (objectid)
-);
-
 
 -- -----------------------------------------------------
 -- Table openidm.securitykeys
@@ -246,6 +225,7 @@ CREATE TABLE openidm.auditaccess (
   response_statuscode VARCHAR(255) NULL ,
   response_elapsedtime VARCHAR(255) NULL ,
   response_elapsedtimeunits VARCHAR(255) NULL ,
+  response_detail TEXT NULL ,
   roles TEXT NULL ,
   PRIMARY KEY (objectid)
 );
@@ -271,8 +251,6 @@ CREATE TABLE openidm.auditconfig (
   PRIMARY KEY (objectid)
 );
 
-CREATE INDEX idx_auditconfig_transactionid ON openidm.auditconfig (transactionid);
-
 -- -----------------------------------------------------
 -- Table openidm.auditactivity
 -- -----------------------------------------------------
@@ -296,9 +274,6 @@ CREATE TABLE openidm.auditactivity (
   status VARCHAR(20),
   PRIMARY KEY (objectid)
 );
-
-CREATE INDEX idx_auditactivity_transactionid ON openidm.auditactivity (transactionid);
-
 
 -- -----------------------------------------------------
 -- Table openidm.auditrecon
@@ -329,6 +304,8 @@ CREATE TABLE openidm.auditrecon (
   PRIMARY KEY (objectid)
 );
 
+CREATE INDEX idx_auditrecon_reconid ON openidm.auditrecon (reconid);
+CREATE INDEX idx_auditrecon_entrytype ON openidm.auditrecon (entrytype);
 
 -- -----------------------------------------------------
 -- Table openidm.auditsync

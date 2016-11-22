@@ -54,6 +54,9 @@ ext {
     openigVersion = "5.0.0-SNAPSHOT"
     // default repo name
     repo = "forgerock"
+
+    // example gcr project
+    gcrProject = "engineering-devops"
 }
 
 
@@ -85,21 +88,23 @@ clean {
             "openidm/openidm.zip"
 }
 
-task openamDeps() << {
-    configurations.openam.each { f ->
-        if (f.name.contains("openam-server")) {
-            copyTo(f, "openam/openam.war")
-        } else if (f.name.contains("configurator")) {
-            copyTo(f, "openam-config/ssoconfig.zip")
-        } else if  (f.name.contains("ssoadmintools")) {
-            copyTo(f, "ssoadm/ssoadmintools.zip")
+task openamDeps()  {
+    doLast {
+        configurations.openam.each { f ->
+            if (f.name.contains("openam-server")) {
+                copyTo(f, "openam/openam.war")
+            } else if (f.name.contains("configurator")) {
+                copyTo(f, "openam-config/ssoconfig.zip")
+            } else if (f.name.contains("ssoadmintools")) {
+                copyTo(f, "ssoadm/ssoadmintools.zip")
+            }
         }
     }
 }
 
-task opendjDeps() <<  {  configurations.opendj.each  { f -> copyTo(f,"opendj/opendj.zip")  } }
-task openidmDeps() << {  configurations.openidm.each { f -> copyTo(f,"openidm/openidm.zip")  } }
-task openigDeps() <<  {  configurations.openig.each { f -> copyTo(f,"openig/openig.war")  } }
+task opendjDeps() {  doLast { configurations.opendj.each  { f -> copyTo(f,"opendj/opendj.zip")  }} }
+task openidmDeps() { doLast {  configurations.openidm.each { f -> copyTo(f,"openidm/openidm.zip")  } }}
+task openigDeps() { doLast  {  configurations.openig.each { f -> copyTo(f,"openig/openig.war")  } }}
 
 
 // Docker builds are here
@@ -128,6 +133,13 @@ task openidm(type: DockerBuildImage, dependsOn: openidmDeps) {
     tag = "${repo}/openidm:${openidmVersion}"
 }
 
+// todo: We should look at automating copying in the postgres sql files from the openidm zip
+// The version tag matches the openidm sql release
+task postgres(type: DockerBuildImage) {
+    inputDir =  project.file('openidm-postgres')
+    tag = "${repo}/openidm-postgres:${openidmVersion}"
+}
+
 
 task openig(type: DockerBuildImage, dependsOn: openigDeps) {
     inputDir =  project.file('openig')
@@ -138,16 +150,25 @@ task openig(type: DockerBuildImage, dependsOn: openigDeps) {
 task all(dependsOn: [opendj, openam, openamConfig, openig, openidm]) { }
 
 
-// An example of tagging and pushing images to gcr.io for running on GKE
+// An example of tagging and pushing openam images to gcr.io for running on GKE
 task gke(type: Exec, dependsOn: [opendj, openam, openamConfig] ) {
     commandLine 'bash', '-e', '-c', """
-       docker tag forgerock/openam:${openamVersion} gcr.io/engineering-devops/openam:${openamVersion};
-       docker tag forgerock/openam-config:${openamVersion} gcr.io/engineering-devops/openam-config:${openamVersion};
-       docker tag forgerock/opendj:${opendjVersion} gcr.io/engineering-devops/opendj:${opendjVersion};
+       docker tag forgerock/openam:${openamVersion} gcr.io/${gcrProject}/openam:${openamVersion};
+       docker tag forgerock/openam-config:${openamVersion} gcr.io/${gcrProject}/openam-config:${openamVersion};
+       docker tag forgerock/opendj:${opendjVersion} gcr.io/${gcrProject}/opendj:${opendjVersion};
 
-       gcloud docker -- push gcr.io/engineering-devops/openam:${openamVersion};
-       gcloud docker -- push gcr.io/engineering-devops/openam-config:${openamVersion};
-       gcloud docker -- push gcr.io/engineering-devops/opendj:${opendjVersion};
+       gcloud docker -- push gcr.io/${gcrProject}/openam:${openamVersion};
+       gcloud docker -- push gcr.io/${gcrProject}/openam-config:${openamVersion};
+       gcloud docker -- push gcr.io/${gcrProject}/opendj:${opendjVersion};
     """
-
 }
+
+task gke_idm(type:Exec, dependsOn: [postgres]) {
+    commandLine 'bash', '-e', '-c', """
+docker tag forgerock/openidm-postgres:${openidmVersion} gcr.io/${gcrProject}/openidm-postgres:${openidmVersion};
+
+   gcloud docker -- push gcr.io/${gcrProject}/openidm-postgres:${openidmVersion}
+"""
+}
+
+
