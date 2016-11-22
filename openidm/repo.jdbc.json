@@ -6,7 +6,6 @@
     "queries" : {
         "genericTables" : {
             "credential-query" : "SELECT fullobject::text FROM ${_dbSchema}.${_mainTable} obj INNER JOIN ${_dbSchema}.objecttypes objtype ON objtype.id = obj.objecttypes_id WHERE json_extract_path_text(fullobject, 'userName') = ${username} AND json_extract_path_text(fullobject, 'accountStatus') = 'active' AND objtype.objecttype = ${_resource}",
-            "find-by-id" : "SELECT fullobject::text FROM ${_dbSchema}.${_mainTable} obj INNER JOIN ${_dbSchema}.objecttypes objtype ON objtype.id = obj.objecttypes_id WHERE obj.objectid = ${id} AND objtype.objecttype = ${_resource}",
             "get-by-field-value" : "SELECT fullobject::text FROM ${_dbSchema}.${_mainTable} obj INNER JOIN ${_dbSchema}.objecttypes objtype ON objtype.id = obj.objecttypes_id WHERE json_extract_path_text(fullobject, ${field}) = ${value} AND objtype.objecttype = ${_resource}",
             "query-all-ids" : "SELECT obj.objectid FROM ${_dbSchema}.${_mainTable} obj INNER JOIN ${_dbSchema}.objecttypes objtype ON obj.objecttypes_id = objtype.id WHERE objtype.objecttype = ${_resource} LIMIT ${int:_pageSize} OFFSET ${int:_pagedResultsOffset}",
             "query-all-ids-count" : "SELECT COUNT(obj.objectid) AS total FROM ${_dbSchema}.${_mainTable} obj INNER JOIN ${_dbSchema}.objecttypes objtype ON obj.objecttypes_id = objtype.id WHERE objtype.objecttype = ${_resource}",
@@ -18,8 +17,9 @@
             "query-cluster-failed-instances" : "SELECT fullobject::text FROM ${_dbSchema}.${_mainTable} obj WHERE json_extract_path_text(fullobject, 'timestamp') <= ${timestamp} AND json_extract_path_text(fullobject, 'state') IN ('1','2')",
             "query-cluster-instances" : "SELECT fullobject::text FROM ${_dbSchema}.${_mainTable} obj WHERE json_extract_path_text(fullobject, 'type') = 'state'",
             "query-cluster-events" : "SELECT fullobject::text FROM ${_dbSchema}.${_mainTable} obj WHERE json_extract_path_text(fullobject, 'type') = 'event' AND json_extract_path_text(fullobject, 'instanceId') = ${instanceId}",
-            
-            "find-relationships-for-resource" : "SELECT fullobject::text FROM ${_dbSchema}.relationships obj INNER JOIN ${_dbSchema}.objecttypes objtype ON objtype.id = obj.objecttypes_id AND objtype.objecttype = 'relationships' WHERE (((json_extract_path_text(obj.fullobject, 'firstId') = (${fullResourceId})) AND (json_extract_path_text(obj.fullobject, 'firstPropertyName') = (${resourceFieldName})))) OR (((json_extract_path_text(obj.fullobject, 'secondId') = (${fullResourceId})) AND (json_extract_path_text(obj.fullobject, 'secondPropertyName') = (${resourceFieldName}))))"
+
+            "find-relationships-for-resource" : "SELECT fullobject::text FROM ${_dbSchema}.relationships obj WHERE (((json_extract_path_text(obj.fullobject, 'firstId') = (${fullResourceId})) AND (json_extract_path_text(obj.fullobject, 'firstPropertyName') = (${resourceFieldName})))) OR (((json_extract_path_text(obj.fullobject, 'secondId') = (${fullResourceId})) AND (json_extract_path_text(obj.fullobject, 'secondPropertyName') = (${resourceFieldName}))))",
+            "find-relationship-edges" : "SELECT obj.* FROM ${_dbSchema}.relationships obj INNER JOIN ${_dbSchema}.relationshipproperties firstId ON firstId.relationships_id = obj.id AND firstId.propkey = '/firstId' INNER JOIN ${_dbSchema}.relationshipproperties firstPropertyName ON firstPropertyName.relationships_id = obj.id AND firstPropertyName.propkey = '/firstPropertyName' INNER JOIN ${_dbSchema}.relationshipproperties secondId ON secondId.relationships_id = obj.id AND secondId.propkey = '/secondId' INNER JOIN ${_dbSchema}.relationshipproperties secondPropertyName ON secondPropertyName.relationships_id = obj.id AND secondPropertyName.propkey = '/secondPropertyName' WHERE ((firstId.propvalue = ${vertex1Id} AND firstPropertyName.propvalue = ${vertex1FieldName}) AND (secondId.propvalue = ${vertex2Id} AND secondPropertyName.propvalue = ${vertex2FieldName})) UNION ALL SELECT obj.* FROM ${_dbSchema}.relationships obj INNER JOIN ${_dbSchema}.relationshipproperties firstId ON firstId.relationships_id = obj.id AND firstId.propkey = '/firstId' INNER JOIN ${_dbSchema}.relationshipproperties firstPropertyName ON firstPropertyName.relationships_id = obj.id AND firstPropertyName.propkey = '/firstPropertyName' INNER JOIN ${_dbSchema}.relationshipproperties secondId ON secondId.relationships_id = obj.id AND secondId.propkey = '/secondId' INNER JOIN ${_dbSchema}.relationshipproperties secondPropertyName ON secondPropertyName.relationships_id = obj.id AND secondPropertyName.propkey = '/secondPropertyName' WHERE ((firstId.propvalue = ${vertex2Id} AND firstPropertyName.propvalue = ${vertex2FieldName}) AND (secondId.propvalue = ${vertex1Id} AND secondPropertyName.propvalue = ${vertex1FieldName}))"
         },
         "explicitTables" : {
             "query-all-ids" : "SELECT objectid FROM ${_dbSchema}.${_table}",
@@ -30,25 +30,20 @@
             "credential-internaluser-query" : "SELECT objectid, pwd, roles FROM ${_dbSchema}.${_table} WHERE objectid = ${username}",
 
             "links-for-firstId" : "SELECT * FROM ${_dbSchema}.${_table} WHERE linkType = ${linkType} AND firstid = ${firstId}",
-            "links-for-secondId" : "SELECT * FROM ${_dbSchema}.${_table} WHERE linkType = ${linkType} AND secondid = ${secondId}",
             "links-for-linkType" : "SELECT * FROM ${_dbSchema}.${_table} WHERE linkType = ${linkType}",
 
             "scan-tasks" : "SELECT * FROM ${_dbSchema}.${_table} WHERE ${property} < ${condition.before} AND ${taskState.completed} is NULL",
 
-            "audit-by-mapping" : "SELECT * FROM ${_dbSchema}.auditrecon WHERE mapping = ${mappingName}",
-            "audit-by-recon-id" : "SELECT * FROM ${_dbSchema}.auditrecon WHERE reconId = ${reconId}",
-            "audit-by-recon-id-type" : "SELECT * FROM ${_dbSchema}.auditrecon WHERE reconId = ${reconId} AND entryType = ${entryType}",
-            "audit-by-recon-id-situation" : "SELECT * FROM ${_dbSchema}.auditrecon WHERE reconId = ${reconId} AND situation = ${situation}",
-            "audit-by-activity-parent-action" : "SELECT * FROM ${_dbSchema}.auditactivity WHERE parentactionid = ${parentActionId}",
             "query-all" : "SELECT * FROM ${_dbSchema}.${_table}",
-            "get-recons" : "SELECT reconId, activitydate, mapping, message FROM ${_dbSchema}.auditrecon WHERE mapping LIKE ${includeMapping} AND mapping NOT LIKE ${excludeMapping} AND entryType = 'summary' ORDER BY activitydate DESC"
+            "get-recons" : "SELECT reconid, activitydate, mapping FROM ${_dbSchema}.${_table} WHERE mapping LIKE ${includeMapping} AND mapping NOT LIKE ${excludeMapping} AND entrytype = 'summary' ORDER BY activitydate DESC"
         }
     },
     "commands" : {
         "genericTables" : { },
         "explicitTables" : {
-            "purge-by-recon-ids-to-keep" : "DELETE FROM ${_dbSchema}.auditrecon WHERE mapping LIKE ${includeMapping} AND mapping NOT LIKE ${excludeMapping} AND reconId NOT IN (${list:reconIds})",
-            "purge-by-recon-expired" : "DELETE FROM ${_dbSchema}.auditrecon WHERE mapping LIKE ${includeMapping} AND mapping NOT LIKE ${excludeMapping} AND activitydate < ${timestamp}"
+            "purge-by-recon-ids-to-keep" : "DELETE FROM ${_dbSchema}.${_table} WHERE mapping LIKE ${includeMapping} AND mapping NOT LIKE ${excludeMapping} AND reconId NOT IN (${list:reconIds})",
+            "purge-by-recon-expired" : "DELETE FROM ${_dbSchema}.${_table} WHERE mapping LIKE ${includeMapping} AND mapping NOT LIKE ${excludeMapping} AND activitydate < ${timestamp}",
+            "delete-mapping-links" : "DELETE FROM ${_dbSchema}.${_table} WHERE linktype = ${mapping}"
         }
     },
     "resourceMapping" : {
@@ -91,7 +86,7 @@
             "updates" : {
                 "mainTable" : "updateobjects",
                 "propertiesTable" : "updateobjectproperties",
-                "searchableDefault" : true
+                "searchableDefault" : false
             }
         },
         "explicitMapping" : {
@@ -161,7 +156,7 @@
                     "transactionId" : "transactionid",
                     "userId" : "userid",
                     "trackingIds" : {"column" : "trackingids", "type" : "JSON_LIST"},
-                    "runas" : "runas",
+                    "runAs" : "runas",
                     "objectId" : "configobjectid",
                     "operation" : "operation",
                     "before" : "beforeObject",
@@ -268,15 +263,8 @@
                     "response/statusCode" : "response_statuscode",
                     "response/elapsedTime" : "response_elapsedtime",
                     "response/elapsedTimeUnits" : "response_elapsedtimeunits",
+                    "response/detail" : {"column" : "response_detail", "type" : "JSON_MAP"},
                     "roles" : "roles"
-                }
-            },
-            "security" : {
-                "table" : "security",
-                "objectToColumn" : {
-                    "_id" : "objectid",
-                    "_rev" : "rev",
-                    "storeString" : "storestring"
                 }
             },
             "security/keys" : {
